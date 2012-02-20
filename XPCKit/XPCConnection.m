@@ -114,7 +114,7 @@
         inMessage = [XPCMessage messageWithObject:inMessage forKey:@"contents"];
     }
     NSLog(@"Sending message %@", inMessage);
-	dispatch_sync(self.dispatchQueue, ^{
+	dispatch_async(self.dispatchQueue, ^{
 		xpc_connection_send_message(_connection, inMessage.XPCDictionary);
 	});
 }
@@ -125,7 +125,7 @@
     // Need to tell message that we want a direct reply
     [inMessage setNeedsDirectReply:YES];
     
-	dispatch_sync(self.dispatchQueue, ^{
+	dispatch_async(self.dispatchQueue, ^{
 		NSLog(@"Sending message %@", inMessage);
 		xpc_connection_send_message_with_reply(_connection, inMessage.XPCDictionary, dispatch_get_main_queue(), ^(xpc_object_t inXPCReplyDictionary) {
 			XPCMessage *replyMessage = [XPCMessage messageWithXPCDictionary:inXPCReplyDictionary];
