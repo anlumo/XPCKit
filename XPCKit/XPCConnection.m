@@ -109,30 +109,29 @@
 
 -(void)sendMessage:(XPCMessage *)inMessage
 {
-    // TODO: former implementation wrapped code into a dispatch_async()
-    // Would we benefit from that here?
     if (![inMessage isKindOfClass:[XPCMessage class]]) {
         // TODO: setting an arbitrary key is probably not a good idea here
         inMessage = [XPCMessage messageWithObject:inMessage forKey:@"contents"];
     }
     NSLog(@"Sending message %@", inMessage);
-    xpc_connection_send_message(_connection, inMessage.XPCDictionary);
+	dispatch_async(self.dispatchQueue, ^{
+		xpc_connection_send_message(_connection, inMessage.XPCDictionary);
+	});
 }
 
 
 -(void)sendMessage:(XPCMessage *)inMessage withReply:(XPCReplyHandler)replyHandler
 {
-    // TODO: former implementation wrapped code into a dispatch_async()
-    // Would we benefit from that here?
-    
     // Need to tell message that we want a direct reply
     [inMessage setNeedsDirectReply:YES];
     
-    NSLog(@"Sending message %@", inMessage);
-    xpc_connection_send_message_with_reply(_connection, inMessage.XPCDictionary, dispatch_get_main_queue(), ^(xpc_object_t inXPCReplyDictionary) {
-        XPCMessage *replyMessage = [XPCMessage messageWithXPCDictionary:inXPCReplyDictionary];
-        replyHandler(replyMessage);
-    });
+	dispatch_async(self.dispatchQueue, ^{
+		NSLog(@"Sending message %@", inMessage);
+		xpc_connection_send_message_with_reply(_connection, inMessage.XPCDictionary, dispatch_get_main_queue(), ^(xpc_object_t inXPCReplyDictionary) {
+			XPCMessage *replyMessage = [XPCMessage messageWithXPCDictionary:inXPCReplyDictionary];
+			replyHandler(replyMessage);
+		});
+	});
 }
 
 -(NSString *)connectionName{
